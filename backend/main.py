@@ -11,8 +11,11 @@ from .routers import chat, admin
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Inicializar tablas y datos institucionales de TEINCO al iniciar
-    seed_database()
+    # Inicializar tablas y datos institucionales de TEINCO al iniciar de forma segura
+    try:
+        seed_database()
+    except Exception as e:
+        print(f"[WARN LIFESPAN] Error no bloqueante al inicializar datos: {e}")
     yield
 
 app = FastAPI(

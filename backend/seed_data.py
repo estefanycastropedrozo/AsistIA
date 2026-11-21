@@ -7,8 +7,17 @@ from .rag_service import rag_index
 
 def seed_database():
     """Inicializa la base de datos con reglamentos de TEINCO y datos de prueba institucionales."""
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"[WARN] Error en create_all: {e}")
+
+    try:
+        db = SessionLocal()
+    except Exception as e:
+        print(f"[WARN] Error abriendo sesion de BD: {e}")
+        return
+
     try:
         # 1. Poblar artículos institucionales
         existing_count = db.query(KnowledgeArticle).count()
