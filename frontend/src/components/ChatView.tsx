@@ -25,7 +25,8 @@ import {
   ShieldCheck,
   ExternalLink,
   ChevronRight,
-  ArrowRight
+  ArrowRight,
+  X
 } from 'lucide-react';
 import { ChatMessageItem, DivisionContactInfo } from '../types';
 
@@ -46,6 +47,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ userRole, setUserRole }) => 
   // Estados de los paneles laterales (abiertos por defecto en pantalla grande)
   const [showLeftPanel, setShowLeftPanel] = useState(true);
   const [showRightPanel, setShowRightPanel] = useState(true);
+  const [mobileDrawer, setMobileDrawer] = useState<'none' | 'left' | 'right'>('none');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -368,91 +370,218 @@ export const ChatView: React.FC<ChatViewProps> = ({ userRole, setUserRole }) => 
     });
   };
 
+  const renderLeftPanelContent = (isMobile = false) => (
+    <div className="flex flex-col h-full space-y-3 overflow-hidden">
+      {/* Cabecera del Panel Izquierdo */}
+      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold border border-blue-200">
+            <Building2 className="w-4 h-4 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Dependencias</h3>
+            <p className="text-[10px] text-slate-400 font-medium">Directorio Oficial TEINCO</p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => isMobile ? setMobileDrawer('none') : setShowLeftPanel(false)}
+          className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+          title={isMobile ? "Cerrar" : "Ocultar panel"}
+        >
+          {isMobile ? <X className="w-5 h-5 text-slate-600" /> : <PanelLeftClose className="w-4 h-4" />}
+        </button>
+      </div>
+
+      {/* Lista de Dependencias en Tarjetas Pasteles Suaves */}
+      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+        <button
+          onClick={() => {
+            setActiveDivisionFilter('all');
+            if (isMobile) setMobileDrawer('none');
+          }}
+          className={`w-full text-left p-2.5 rounded-xl border transition-all text-xs flex items-center justify-between ${
+            activeDivisionFilter === 'all'
+              ? 'bg-blue-600 text-white border-blue-700 shadow-xs'
+              : 'bg-indigo-50/80 border-indigo-200/80 text-indigo-950 hover:bg-indigo-100/80'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Sparkles className={`w-4 h-4 ${activeDivisionFilter === 'all' ? 'text-white' : 'text-amber-500'}`} />
+            <span className="font-bold">Todas las Dependencias</span>
+          </div>
+          <ChevronRight className={`w-3.5 h-3.5 opacity-60 ${activeDivisionFilter === 'all' ? 'text-white' : ''}`} />
+        </button>
+
+        {divisionsData.map(div => {
+          const meta = divisionMeta[div.division_name] || divisionMeta['General'];
+          const isSelected = activeDivisionFilter === div.division_name;
+
+          return (
+            <div
+              key={div.division_name}
+              onClick={() => {
+                setActiveDivisionFilter(div.division_name);
+                if (div.sample_queries && div.sample_queries.length > 0) {
+                  handleSendMessage(div.sample_queries[0]);
+                }
+                if (isMobile) setMobileDrawer('none');
+              }}
+              className={`p-2.5 rounded-xl border transition-all cursor-pointer text-xs space-y-1 ${
+                isSelected
+                  ? 'bg-blue-600 text-white border-blue-700 shadow-xs'
+                  : `${meta.bg} ${meta.border} hover:shadow-2xs hover:scale-[1.01]`
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-bold">
+                  <Building2 className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : meta.iconColor}`} />
+                  <span className={isSelected ? 'text-white' : meta.text}>{div.division_name}</span>
+                </div>
+              </div>
+              <p className={`text-[11px] leading-tight line-clamp-1 ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
+                {meta.desc}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Pie del Panel Izquierdo con Logo de TEINCO */}
+      <div className="pt-2 border-t border-slate-100 flex items-center justify-center bg-slate-50/60 p-2 rounded-xl">
+        <img src="/teinco_logo.png" alt="TEINCO" className="h-7 w-auto object-contain" />
+      </div>
+    </div>
+  );
+
+  const renderRightPanelContent = (isMobile = false) => (
+    <div className="flex flex-col h-full space-y-3 overflow-y-auto">
+      {/* Cabecera del Panel Derecho */}
+      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center font-bold border border-amber-200">
+            <HelpCircle className="w-4 h-4 text-amber-600" />
+          </div>
+          <div>
+            <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Centro de Ayuda</h3>
+            <p className="text-[10px] text-slate-400 font-medium">Canales y Trámites Rápidos</p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => isMobile ? setMobileDrawer('none') : setShowRightPanel(false)}
+          className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+          title={isMobile ? "Cerrar" : "Ocultar panel"}
+        >
+          {isMobile ? <X className="w-5 h-5 text-slate-600" /> : <PanelRightClose className="w-4 h-4" />}
+        </button>
+      </div>
+
+      {/* Tarjeta 1: Atención Oficial Inmediata */}
+      <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-50/80 via-orange-50/40 to-blue-50/50 border border-amber-200/80 space-y-2 shadow-2xs">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-black text-blue-900 uppercase tracking-wider">Atención Registro y Control</span>
+          <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">Oficial</span>
+        </div>
+
+        <a
+          href="https://wa.me/573013337956"
+          target="_blank"
+          rel="noreferrer"
+          className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs"
+        >
+          <MessageCircle className="w-4 h-4" />
+          <span>Chatear por WhatsApp</span>
+        </a>
+
+        <a
+          href="mailto:coordinacionregistroycontrol@teinco.edu.co"
+          className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-white border border-blue-200 hover:border-blue-500 text-blue-800 font-semibold text-[11px] transition-colors"
+        >
+          <Mail className="w-3.5 h-3.5 text-blue-600" />
+          <span className="truncate">Enviar Correo Institucional</span>
+        </a>
+
+        <div className="text-[11px] text-slate-600 space-y-1 pt-1 border-t border-amber-200/50">
+          <div className="flex items-center gap-1.5">
+            <Phone className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+            <span className="font-semibold text-slate-800">PBX: +57 601 7433200</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>Lun a Vie: 7:00am a 10:00pm</span>
+          </div>
+          <div className="flex items-start gap-1.5">
+            <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+            <span className="text-[10px]">Calle 57 # 9-28 / Av. Caracas # 57-41</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Tarjeta 2: Trámites con 1 Clic */}
+      <div className="space-y-2 pt-1">
+        <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">Trámites en 1 Clic</span>
+        <div className="space-y-1.5">
+          {[
+            { title: 'Solicitar Certificado de Estudio', q: '¿Cuáles son los pasos para solicitar certificado de estudio?', color: 'border-blue-200 hover:bg-blue-50/60' },
+            { title: 'Pago con Botón PSE o Bancos', q: '¿Cómo pagar el semestre mediante PSE o bancos autorizados?', color: 'border-amber-200 hover:bg-amber-50/60' },
+            { title: 'Opciones y Modos de Grado', q: '¿Cuáles son las opciones de grado disponibles en TEINCO (proyecto, diplomado, prácticas)?', color: 'border-purple-200 hover:bg-purple-50/60' },
+            { title: 'Requisitos para Postularse a Grado', q: '¿Cuáles son los requisitos completos para graduarme?', color: 'border-emerald-200 hover:bg-emerald-50/60' }
+          ].map((item, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                handleSendMessage(item.q);
+                if (isMobile) setMobileDrawer('none');
+              }}
+              className={`w-full text-left p-2 rounded-xl border bg-white transition-all text-[11px] font-semibold text-slate-700 flex items-center justify-between group ${item.color}`}
+            >
+              <span className="group-hover:text-blue-700 transition-colors">{item.title}</span>
+              <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tarjeta 3: Cumplimiento y Seguridad de Datos */}
+      <div className="mt-auto p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[10px] text-slate-500 space-y-1">
+        <div className="flex items-center gap-1.5 font-bold text-slate-700">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Gobernanza de Datos</span>
+        </div>
+        <p>
+          Tus consultas se procesan bajo anonimización estricta conforme a la Ley Estatutaria 1581 de 2012.
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="w-full max-w-[1700px] mx-auto px-2 sm:px-4 py-3 h-[calc(100vh-5.5rem)] flex gap-3 overflow-hidden">
       
+      {/* ============================================================== */}
+      {/* MODAL / DRAWER LATERAL PARA DISPOSITIVOS MÓVILES                */}
+      {/* ============================================================== */}
+      {mobileDrawer !== 'none' && (
+        <div className="fixed inset-0 z-50 flex lg:hidden animate-fade-in">
+          <div 
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setMobileDrawer('none')}
+          />
+          <div className={`relative z-10 w-[88%] max-w-sm h-full bg-white shadow-2xl flex flex-col p-4 overflow-hidden ${
+            mobileDrawer === 'left' ? 'mr-auto rounded-r-2xl animate-slide-right' : 'ml-auto rounded-l-2xl animate-slide-left'
+          }`}>
+            {mobileDrawer === 'left' ? renderLeftPanelContent(true) : renderRightPanelContent(true)}
+          </div>
+        </div>
+      )}
+
       {/* ============================================================== */}
       {/* PANEL LATERAL IZQUIERDO: DIRECTORIO DE DEPENDENCIAS TEINCO     */}
       {/* ============================================================== */}
       {showLeftPanel && (
         <aside className="hidden lg:flex flex-col w-72 shrink-0 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-sm p-3.5 space-y-3 overflow-hidden animate-fade-in">
-          
-          {/* Cabecera del Panel Izquierdo */}
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center font-bold border border-blue-200">
-                <Building2 className="w-4 h-4 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Dependencias</h3>
-                <p className="text-[10px] text-slate-400 font-medium">Directorio Oficial TEINCO</p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowLeftPanel(false)}
-              className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
-              title="Ocultar panel"
-            >
-              <PanelLeftClose className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Lista de Dependencias en Tarjetas Pasteles Suaves */}
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-            <button
-              onClick={() => setActiveDivisionFilter('all')}
-              className={`w-full text-left p-2.5 rounded-xl border transition-all text-xs flex items-center justify-between ${
-                activeDivisionFilter === 'all'
-                  ? 'bg-blue-600 text-white border-blue-700 shadow-xs'
-                  : 'bg-indigo-50/80 border-indigo-200/80 text-indigo-950 hover:bg-indigo-100/80'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Sparkles className={`w-4 h-4 ${activeDivisionFilter === 'all' ? 'text-white' : 'text-amber-500'}`} />
-                <span className="font-bold">Todas las Dependencias</span>
-              </div>
-              <ChevronRight className={`w-3.5 h-3.5 opacity-60 ${activeDivisionFilter === 'all' ? 'text-white' : ''}`} />
-            </button>
-
-            {divisionsData.map(div => {
-              const meta = divisionMeta[div.division_name] || divisionMeta['General'];
-              const isSelected = activeDivisionFilter === div.division_name;
-
-              return (
-                <div
-                  key={div.division_name}
-                  onClick={() => {
-                    setActiveDivisionFilter(div.division_name);
-                    if (div.sample_queries && div.sample_queries.length > 0) {
-                      handleSendMessage(div.sample_queries[0]);
-                    }
-                  }}
-                  className={`p-2.5 rounded-xl border transition-all cursor-pointer text-xs space-y-1 ${
-                    isSelected
-                      ? 'bg-blue-600 text-white border-blue-700 shadow-xs'
-                      : `${meta.bg} ${meta.border} hover:shadow-2xs hover:scale-[1.01]`
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 font-bold">
-                      <Building2 className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : meta.iconColor}`} />
-                      <span className={isSelected ? 'text-white' : meta.text}>{div.division_name}</span>
-                    </div>
-                  </div>
-                  <p className={`text-[11px] leading-tight line-clamp-1 ${isSelected ? 'text-blue-100' : 'text-slate-500'}`}>
-                    {meta.desc}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Pie del Panel Izquierdo con Logo de TEINCO */}
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-center bg-slate-50/60 p-2 rounded-xl">
-            <img src="/teinco_logo.png" alt="TEINCO" className="h-7 w-auto object-contain" />
-          </div>
-
+          {renderLeftPanelContent(false)}
         </aside>
       )}
 
@@ -501,6 +630,26 @@ export const ChatView: React.FC<ChatViewProps> = ({ userRole, setUserRole }) => 
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Botones móviles para abrir Dependencias y Centro de Ayuda */}
+            <div className="flex items-center gap-1.5 lg:hidden">
+              <button
+                onClick={() => setMobileDrawer('left')}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-xs font-bold transition-all shadow-2xs"
+                title="Abrir directorio de dependencias"
+              >
+                <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                <span>Dependencias</span>
+              </button>
+              <button
+                onClick={() => setMobileDrawer('right')}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition-all shadow-2xs"
+                title="Abrir centro de ayuda y contactos"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
+                <span>Ayuda</span>
+              </button>
+            </div>
+
             <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50/80 border border-blue-200 text-[11px] font-bold text-blue-800">
               <GraduationCap className="w-3.5 h-3.5 text-blue-600" />
               <span>Periodo 2026-1</span>
@@ -762,102 +911,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ userRole, setUserRole }) => 
       {/* ============================================================== */}
       {showRightPanel && (
         <aside className="hidden xl:flex flex-col w-80 shrink-0 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-sm p-3.5 space-y-3 overflow-y-auto animate-fade-in">
-          
-          {/* Cabecera del Panel Derecho */}
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center font-bold border border-amber-200">
-                <HelpCircle className="w-4 h-4 text-amber-600" />
-              </div>
-              <div>
-                <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Centro de Ayuda</h3>
-                <p className="text-[10px] text-slate-400 font-medium">Canales y Trámites Rápidos</p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowRightPanel(false)}
-              className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
-              title="Ocultar panel"
-            >
-              <PanelRightClose className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Tarjeta 1: Atención Oficial Inmediata */}
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-50/80 via-orange-50/40 to-blue-50/50 border border-amber-200/80 space-y-2 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black text-blue-900 uppercase tracking-wider">Atención Registro y Control</span>
-              <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">Oficial</span>
-            </div>
-
-            <a
-              href="https://wa.me/573013337956"
-              target="_blank"
-              rel="noreferrer"
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>Chatear por WhatsApp</span>
-            </a>
-
-            <a
-              href="mailto:coordinacionregistroycontrol@teinco.edu.co"
-              className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-white border border-blue-200 hover:border-blue-500 text-blue-800 font-semibold text-[11px] transition-colors"
-            >
-              <Mail className="w-3.5 h-3.5 text-blue-600" />
-              <span className="truncate">Enviar Correo Institucional</span>
-            </a>
-
-            <div className="text-[11px] text-slate-600 space-y-1 pt-1 border-t border-amber-200/50">
-              <div className="flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                <span className="font-semibold text-slate-800">PBX: +57 601 7433200</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <span>Lun a Vie: 7:00am a 10:00pm</span>
-              </div>
-              <div className="flex items-start gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
-                <span className="text-[10px]">Calle 57 # 9-28 / Av. Caracas # 57-41</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Tarjeta 2: Trámites con 1 Clic */}
-          <div className="space-y-2 pt-1">
-            <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider block">Trámites en 1 Clic</span>
-            <div className="space-y-1.5">
-              {[
-                { title: 'Solicitar Certificado de Estudio', q: '¿Cuáles son los pasos para solicitar certificado de estudio?', color: 'border-blue-200 hover:bg-blue-50/60' },
-                { title: 'Pago con Botón PSE o Bancos', q: '¿Cómo pagar el semestre mediante PSE o bancos autorizados?', color: 'border-amber-200 hover:bg-amber-50/60' },
-                { title: 'Opciones y Modos de Grado', q: '¿Cuáles son las opciones de grado disponibles en TEINCO (proyecto, diplomado, prácticas)?', color: 'border-purple-200 hover:bg-purple-50/60' },
-                { title: 'Requisitos para Postularse a Grado', q: '¿Cuáles son los requisitos completos para graduarme?', color: 'border-emerald-200 hover:bg-emerald-50/60' }
-              ].map((item, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSendMessage(item.q)}
-                  className={`w-full text-left p-2 rounded-xl border bg-white transition-all text-[11px] font-semibold text-slate-700 flex items-center justify-between group ${item.color}`}
-                >
-                  <span className="group-hover:text-blue-700 transition-colors">{item.title}</span>
-                  <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition-transform group-hover:translate-x-0.5" />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Tarjeta 3: Cumplimiento y Seguridad de Datos */}
-          <div className="mt-auto p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[10px] text-slate-500 space-y-1">
-            <div className="flex items-center gap-1.5 font-bold text-slate-700">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Gobernanza de Datos</span>
-            </div>
-            <p>
-              Tus consultas se procesan bajo anonimización estricta conforme a la Ley Estatutaria 1581 de 2012.
-            </p>
-          </div>
-
+          {renderRightPanelContent(false)}
         </aside>
       )}
 
