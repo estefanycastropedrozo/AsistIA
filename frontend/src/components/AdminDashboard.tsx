@@ -40,8 +40,8 @@ export const AdminDashboard: React.FC = () => {
     const saved = sessionStorage.getItem('asistia_admin_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [loginEmail, setLoginEmail] = useState('admin@teinco.edu.co');
-  const [loginPassword, setLoginPassword] = useState('Teinco2026*');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -406,7 +406,7 @@ export const AdminDashboard: React.FC = () => {
                 required
                 value={loginEmail}
                 onChange={e => setLoginEmail(e.target.value)}
-                placeholder="admin@teinco.edu.co"
+                placeholder="funcionario@teinco.edu.co"
                 className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
               />
             </div>
@@ -433,14 +433,6 @@ export const AdminDashboard: React.FC = () => {
               {isLoggingIn ? 'Verificando...' : 'Ingresar al Panel'}
             </button>
           </form>
-
-          <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200/80 text-[11px] text-blue-900 space-y-1">
-            <span className="font-bold flex items-center gap-1">
-              <Info className="w-3.5 h-3.5 text-blue-600" /> Credenciales de demostración para jurados:
-            </span>
-            <p><strong>Usuario:</strong> <code>admin@teinco.edu.co</code></p>
-            <p><strong>Clave:</strong> <code>Teinco2026*</code></p>
-          </div>
         </div>
       </div>
     );
