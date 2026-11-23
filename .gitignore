@@ -22,8 +22,20 @@ yarn-error.log*
 # Database & runtime files
 # (Note: we keep seed_data so the db auto-populates on cloud deploy)
 backend/runtime_settings.json
+*.db
+*.sqlite
+*.sqlite3
+*.docx
 *.tmp
 *.tmp.zip
+
+# Node.js
+frontend/node_modules/
+frontend/node_modules*/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Operating System files
 .DS_Store
